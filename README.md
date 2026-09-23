@@ -9,24 +9,24 @@ Dead link checker for Obsidian vaults. The wikilink counterpart of `markdown-lin
 
 ```
 $ wikilink-check ~/vault
-files scanned:   1566
+files scanned:   1567
 links found:     7093
-unresolved:      2333
+unresolved:      2332
 
 by tier / kind
-  harmful           1519
+  harmful           1489
     templater                0
     missing_media           26
     broken_markdown_link    14
-    deleted_note          1479
-  benign             684
-    placeholder            684
-  false_positive       130
-    explanatory             22
+    deleted_note          1449
+  benign              710
+    placeholder            710
+  false_positive      133
+    explanatory             25
     immutable_source       108
 
 by source directory
-  journal                       2083
+  journal                       2082
   wiki                           112
   ...
 
@@ -153,10 +153,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download v2026.09.23.120000 --repo MH4GF/wikilink-check \
-            --pattern 'wikilink-check-x86_64-unknown-linux-gnu.tar.gz*'
-          shasum -a 256 -c wikilink-check-x86_64-unknown-linux-gnu.tar.gz.sha256
-          tar -xzf wikilink-check-x86_64-unknown-linux-gnu.tar.gz
+          archive="wikilink-check-x86_64-unknown-linux-gnu.tar.gz"
+          gh release download v2026.09.23.144905 --repo MH4GF/wikilink-check \
+            --pattern "${archive}" --pattern "${archive}.sha256"
+          shasum -a 256 -c "${archive}.sha256"
+          tar -xzf "${archive}"
       - run: ./wikilink-check --baseline .wikilink-check-baseline.json
 ```
 
