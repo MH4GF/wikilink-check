@@ -1,0 +1,5 @@
+# Exercised by tests/cli.rs. Every rule of the classifier has at least one link here.
+exclude = ["ignored/**"]
+explanatory_files = ["docs/**"]
+explanatory_patterns = ['^\.\.\.$']
+immutable_sources = ["raw/**"]

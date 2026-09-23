@@ -1,0 +1,256 @@
+---
+source: tests/cli.rs
+expression: report.to_json(10)
+---
+{
+  "files_scanned": 8,
+  "links_total": 32,
+  "unresolved_total": 20,
+  "git_history_used": false,
+  "warnings": [],
+  "by_tier": {
+    "benign": 9,
+    "false_positive": 5,
+    "harmful": 6
+  },
+  "by_kind": {
+    "broken_markdown_link": 2,
+    "deleted_note": 0,
+    "explanatory": 3,
+    "immutable_source": 2,
+    "missing_media": 2,
+    "placeholder": 9,
+    "templater": 2
+  },
+  "by_source_dir": {
+    ".": 2,
+    "docs": 2,
+    "notes": 12,
+    "raw": 2,
+    "templates": 2
+  },
+  "top_targets": [
+    {
+      "target": "Missing Note",
+      "count": 4
+    },
+    {
+      "target": "...",
+      "count": 1
+    },
+    {
+      "target": "../../Beta",
+      "count": 1
+    },
+    {
+      "target": ".hidden/secret",
+      "count": 1
+    },
+    {
+      "target": "/notes/Beta",
+      "count": 1
+    },
+    {
+      "target": "<% tp.date.now(\"YYYY-MM-DD\", -1) %>",
+      "count": 1
+    },
+    {
+      "target": "<% tp.date.now(\"YYYY-MM-DD\", 1) %>",
+      "count": 1
+    },
+    {
+      "target": "Missing Note.md",
+      "count": 1
+    },
+    {
+      "target": "Upstream Ref",
+      "count": 1
+    },
+    {
+      "target": "implementation.md",
+      "count": 1
+    }
+  ],
+  "links": [
+    {
+      "source": "Placeholders.md",
+      "line": 1,
+      "target": "...",
+      "raw": "[[...]]",
+      "syntax": "wikilink",
+      "tier": "false_positive",
+      "kind": "explanatory"
+    },
+    {
+      "source": "Table.md",
+      "line": 4,
+      "target": "missing/x",
+      "raw": "[[missing/x\\|X]]",
+      "syntax": "wikilink",
+      "tier": "benign",
+      "kind": "placeholder"
+    },
+    {
+      "source": "docs/SKILL.md",
+      "line": 1,
+      "target": "wikilink",
+      "raw": "[[wikilink]]",
+      "syntax": "wikilink",
+      "tier": "false_positive",
+      "kind": "explanatory"
+    },
+    {
+      "source": "docs/SKILL.md",
+      "line": 1,
+      "target": "ファイル名",
+      "raw": "[[ファイル名|alias]]",
+      "syntax": "wikilink",
+      "tier": "false_positive",
+      "kind": "explanatory"
+    },
+    {
+      "source": "notes/Alpha.md",
+      "line": 9,
+      "target": "Missing Note",
+      "raw": "[[Missing Note]]",
+      "syntax": "wikilink",
+      "tier": "benign",
+      "kind": "placeholder"
+    },
+    {
+      "source": "notes/Alpha.md",
+      "line": 9,
+      "target": "Missing Note",
+      "raw": "[[Missing Note|alias]]",
+      "syntax": "wikilink",
+      "tier": "benign",
+      "kind": "placeholder"
+    },
+    {
+      "source": "notes/Alpha.md",
+      "line": 9,
+      "target": "Missing Note",
+      "raw": "[[Missing Note#heading]]",
+      "syntax": "wikilink",
+      "tier": "benign",
+      "kind": "placeholder"
+    },
+    {
+      "source": "notes/Alpha.md",
+      "line": 11,
+      "target": "/notes/Beta",
+      "raw": "[[/notes/Beta]]",
+      "syntax": "wikilink",
+      "tier": "benign",
+      "kind": "placeholder"
+    },
+    {
+      "source": "notes/Alpha.md",
+      "line": 11,
+      "target": "wrong/Beta",
+      "raw": "[[wrong/Beta]]",
+      "syntax": "wikilink",
+      "tier": "benign",
+      "kind": "placeholder"
+    },
+    {
+      "source": "notes/Alpha.md",
+      "line": 11,
+      "target": "../../Beta",
+      "raw": "[[../../Beta]]",
+      "syntax": "wikilink",
+      "tier": "benign",
+      "kind": "placeholder"
+    },
+    {
+      "source": "notes/Alpha.md",
+      "line": 13,
+      "target": ".hidden/secret",
+      "raw": "[[.hidden/secret]]",
+      "syntax": "wikilink",
+      "tier": "benign",
+      "kind": "placeholder"
+    },
+    {
+      "source": "notes/Alpha.md",
+      "line": 15,
+      "target": "missing.png",
+      "raw": "![[missing.png]]",
+      "syntax": "embed",
+      "tier": "harmful",
+      "kind": "missing_media"
+    },
+    {
+      "source": "notes/Alpha.md",
+      "line": 15,
+      "target": "missing.pdf",
+      "raw": "missing.pdf",
+      "syntax": "markdown",
+      "tier": "harmful",
+      "kind": "missing_media"
+    },
+    {
+      "source": "notes/Alpha.md",
+      "line": 17,
+      "target": "nope.md",
+      "raw": "nope.md",
+      "syntax": "markdown",
+      "tier": "harmful",
+      "kind": "broken_markdown_link"
+    },
+    {
+      "source": "notes/Alpha.md",
+      "line": 17,
+      "target": "Missing Note.md",
+      "raw": "Missing%20Note.md",
+      "syntax": "markdown",
+      "tier": "harmful",
+      "kind": "broken_markdown_link"
+    },
+    {
+      "source": "notes/Alpha.md",
+      "line": 27,
+      "target": "Missing Note",
+      "raw": "[[Missing Note]]",
+      "syntax": "wikilink",
+      "tier": "benign",
+      "kind": "placeholder"
+    },
+    {
+      "source": "raw/articles/External.md",
+      "line": 1,
+      "target": "implementation.md",
+      "raw": "implementation.md",
+      "syntax": "markdown",
+      "tier": "false_positive",
+      "kind": "immutable_source"
+    },
+    {
+      "source": "raw/articles/External.md",
+      "line": 1,
+      "target": "Upstream Ref",
+      "raw": "[[Upstream Ref]]",
+      "syntax": "wikilink",
+      "tier": "false_positive",
+      "kind": "immutable_source"
+    },
+    {
+      "source": "templates/daily.md",
+      "line": 1,
+      "target": "<% tp.date.now(\"YYYY-MM-DD\", -1) %>",
+      "raw": "[[<% tp.date.now(\"YYYY-MM-DD\", -1) %>]]",
+      "syntax": "wikilink",
+      "tier": "harmful",
+      "kind": "templater"
+    },
+    {
+      "source": "templates/daily.md",
+      "line": 2,
+      "target": "<% tp.date.now(\"YYYY-MM-DD\", 1) %>",
+      "raw": "[[<% tp.date.now(\"YYYY-MM-DD\", 1) %>]]",
+      "syntax": "wikilink",
+      "tier": "harmful",
+      "kind": "templater"
+    }
+  ]
+}

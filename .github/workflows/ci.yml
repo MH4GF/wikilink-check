@@ -1,0 +1,32 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: jdx/mise-action@v2
+
+      - name: install rustfmt + clippy components
+        run: rustup component add --toolchain 1.95.0 rustfmt clippy
+
+      - name: cargo fmt
+        run: cargo fmt --all -- --check
+
+      - name: cargo clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: cargo test
+        run: cargo test --all-targets
+
+      - name: cargo build --release
+        run: cargo build --release
+
+      - name: smoke run on the fixture vault
+        run: ./target/release/wikilink-check tests/fixtures/mini-vault --no-git --list

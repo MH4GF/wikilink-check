@@ -1,0 +1,2 @@
+- yesterday: [[<% tp.date.now("YYYY-MM-DD", -1) %>]]
+- tomorrow: [[<% tp.date.now("YYYY-MM-DD", 1) %>]]

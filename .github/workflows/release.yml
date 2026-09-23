@@ -1,0 +1,72 @@
+name: release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: jdx/mise-action@v2
+
+      - name: cargo build --release
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: package
+        id: package
+        run: |
+          set -euo pipefail
+          archive="wikilink-check-${{ matrix.target }}.tar.gz"
+          mkdir -p dist
+          tar -czf "dist/${archive}" -C "target/${{ matrix.target }}/release" wikilink-check
+          (cd dist && shasum -a 256 "${archive}" > "${archive}.sha256")
+          echo "archive=dist/${archive}" >> "$GITHUB_OUTPUT"
+          echo "checksum=dist/${archive}.sha256" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wikilink-check-${{ matrix.target }}
+          path: |
+            ${{ steps.package.outputs.archive }}
+            ${{ steps.package.outputs.checksum }}
+          retention-days: 7
+
+  release:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="v$(TZ=Asia/Tokyo date +%Y.%m.%d.%H%M%S)"
+          gh release create "${tag}" \
+            --title "${tag}" \
+            --target "${GITHUB_SHA}" \
+            --generate-notes \
+            dist/*

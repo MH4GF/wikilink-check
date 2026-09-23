@@ -1,0 +1,37 @@
+[package]
+name = "wikilink-check"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95.0"
+description = "Dead link checker for Obsidian wikilinks, with rule-based classification and baseline mode for CI"
+license = "MIT"
+repository = "https://github.com/MH4GF/wikilink-check"
+
+[[bin]]
+name = "wikilink-check"
+path = "src/main.rs"
+
+[lib]
+name = "wikilink_check"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+globset = "0.4"
+pulldown-cmark = { version = "0.13", default-features = false }
+regex = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+toml = "0.8"
+unicode-normalization = "0.1"
+walkdir = "2"
+
+[dev-dependencies]
+insta = { version = "1", features = ["json"] }
+tempfile = "3"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
