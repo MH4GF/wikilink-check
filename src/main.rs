@@ -32,6 +32,11 @@ struct Cli {
     #[arg(long, value_name = "FILE")]
     baseline: Option<PathBuf>,
 
+    /// Also exit 1 when the baseline lists links that no longer occur, so that the file
+    /// stays pruned.
+    #[arg(long, requires = "baseline")]
+    fail_on_stale: bool,
+
     /// Write the current unresolved links to this baseline file (created or replaced).
     #[arg(long, value_name = "FILE")]
     update_baseline: Option<PathBuf>,
@@ -91,7 +96,7 @@ fn run() -> Result<ExitCode> {
     if let Some(path) = &cli.baseline {
         let baseline = Baseline::load(path)?;
         let diff = baseline.diff(&report.links, &config.fail_on);
-        failed = !diff.new_failing.is_empty();
+        failed = !diff.new_failing.is_empty() || (cli.fail_on_stale && !diff.fixed.is_empty());
         report.baseline = Some(diff);
     }
 

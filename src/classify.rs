@@ -67,6 +67,11 @@ impl Kind {
         }
     }
 
+    /// The inverse of [`Kind::as_str`], used when reading a baseline.
+    pub fn parse(s: &str) -> Option<Kind> {
+        Kind::ALL.into_iter().find(|k| k.as_str() == s)
+    }
+
     pub fn tier(self) -> Tier {
         match self {
             Kind::Explanatory | Kind::ReadonlySource => Tier::Ignored,

@@ -55,6 +55,7 @@ wikilink-check [PATH] [OPTIONS]
   -c, --config <FILE>        Config file (default: <vault>/.wikilink-check.toml if present)
   -f, --format <text|json>   Output format (default: text)
       --baseline <FILE>      Compare with a baseline; exit 1 on new failing links
+      --fail-on-stale        With --baseline, also exit 1 when the baseline has entries that no longer occur
       --update-baseline <FILE>  Write the current unresolved links as the baseline
       --top <N>              Number of most frequent targets to show (default: 10)
       --list                 List every unresolved link (text output)
@@ -128,16 +129,36 @@ fail_on = ["broken"]
 
 ```
 # Once: snapshot the current state and commit the file.
-wikilink-check --update-baseline .wikilink-check-baseline.json
+wikilink-check --update-baseline .wikilink-check-baseline.tsv
 
 # In CI: fail only when a new broken link appears.
-wikilink-check --baseline .wikilink-check-baseline.json
+wikilink-check --baseline .wikilink-check-baseline.tsv
 
 # After fixing links: shrink the baseline and commit it.
-wikilink-check --update-baseline .wikilink-check-baseline.json
+wikilink-check --update-baseline .wikilink-check-baseline.tsv
 ```
 
-Baseline entries are `(source, target, kind)` without line numbers, so editing unrelated lines does not churn the file. Links whose kind changes (an unwritten note whose target turns out to have been deleted) count as new.
+The baseline is a sorted text file with one `source<TAB>target<TAB>kind` line per known unresolved link and `#` comments:
+
+```
+# wikilink-check baseline: one known unresolved link per line as source, target, kind (tab separated).
+# Regenerate with `wikilink-check --update-baseline <this file>`. Order and duplicates do not matter.
+journal/2026-01-05.md	2026-01-04	unwritten
+notes/reading.md	attachments/cover.png	missing_media
+```
+
+Entries carry no line numbers, so editing unrelated lines of a note does not change the file. A link whose kind changes (an unwritten note whose target turns out to have been deleted) counts as new. Entries that no longer occur are reported as `fixed`; they do not fail the run unless `--fail-on-stale` is given, which keeps the file pruned at the cost of failing whenever someone fixes a link without regenerating the baseline.
+
+### Merging baselines from several branches
+
+Because the file is read as a set and sorted on write, git merges it line by line and unrelated additions rarely conflict. To make additions never conflict, opt into a union merge for the file in your repository:
+
+```
+# .gitattributes
+.wikilink-check-baseline.tsv merge=union
+```
+
+With `merge=union`, lines added on both sides are kept, so no entry that either branch relied on is lost. The only thing a union merge can get wrong is to keep a line one side had removed, which shows up as `fixed` and disappears at the next `--update-baseline`. This is an opt-in per repository; the tool works the same without it.
 
 ## GitHub Actions
 
@@ -166,7 +187,7 @@ jobs:
             --pattern "${archive}" --pattern "${archive}.sha256"
           shasum -a 256 -c "${archive}.sha256"
           tar -xzf "${archive}"
-      - run: ./wikilink-check --baseline .wikilink-check-baseline.json
+      - run: ./wikilink-check --baseline .wikilink-check-baseline.tsv
 ```
 
 ## Development

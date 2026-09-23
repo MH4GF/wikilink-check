@@ -88,7 +88,7 @@ fn fixture_classification() {
 #[test]
 fn baseline_exit_codes() {
     let dir = tempfile::tempdir().unwrap();
-    let baseline = dir.path().join("baseline.json");
+    let baseline = dir.path().join("baseline.tsv");
 
     let status = bin()
         .arg(fixture())
@@ -156,6 +156,29 @@ fn baseline_exit_codes() {
     let text = String::from_utf8_lossy(&out.stdout);
     assert!(text.contains("new (other):     1"));
     assert!(text.contains("fixed:           1"));
+
+    // The stale entry alone fails the run only when asked to keep the baseline pruned.
+    let out = bin()
+        .arg(fixture())
+        .args(["--no-git", "--fail-on-stale", "--baseline"])
+        .arg(&baseline)
+        .output()
+        .unwrap();
+    assert_eq!(out.status.code(), Some(1));
+
+    // A hand-merged baseline with duplicate and unsorted lines still loads.
+    let merged = std::fs::read_to_string(&baseline).unwrap();
+    let mut lines: Vec<&str> = merged.lines().collect();
+    lines.reverse();
+    lines.push(lines[0]);
+    std::fs::write(&baseline, lines.join("\n")).unwrap();
+    let out = bin()
+        .arg(fixture())
+        .args(["--no-git", "--baseline"])
+        .arg(&baseline)
+        .output()
+        .unwrap();
+    assert_eq!(out.status.code(), Some(0));
 }
 
 #[test]
