@@ -9,7 +9,7 @@ use crate::classify::{Classified, Kind, Tier};
 /// A committed snapshot of the unresolved links that are already known.
 ///
 /// Entries carry no line numbers so that editing a note above a link does not change the
-/// baseline. The kind is part of the key because a link moving from `placeholder` to
+/// baseline. The kind is part of the key because a link moving from `unwritten` to
 /// `deleted_note` is a real change.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Baseline {

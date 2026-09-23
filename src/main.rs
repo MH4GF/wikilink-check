@@ -11,8 +11,8 @@ use wikilink_check::{RunOptions, check};
 /// Dead link checker for Obsidian wikilinks.
 ///
 /// Scans a vault, reports every link whose target does not exist, and classifies each one
-/// as harmful, benign or a false positive. With `--baseline`, exits non-zero only when a new
-/// harmful link appears that the baseline does not already list.
+/// as broken, unwritten or ignored. With `--baseline`, exits non-zero only when a new broken
+/// link appears that the baseline does not already list.
 #[derive(Parser, Debug)]
 #[command(version, about)]
 struct Cli {
@@ -44,7 +44,7 @@ struct Cli {
     #[arg(long)]
     list: bool,
 
-    /// Do not consult git history; deleted notes are then reported as placeholders.
+    /// Do not consult git history; deleted notes are then reported as unwritten.
     #[arg(long)]
     no_git: bool,
 }

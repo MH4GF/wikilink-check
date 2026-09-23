@@ -3,37 +3,39 @@
 Dead link checker for Obsidian vaults. The wikilink counterpart of `markdown-link-check`.
 
 - Finds every `[[wikilink]]`, `![[embed]]` and `[text](path.md)` whose target does not exist, using the same resolution rules as Obsidian (verified against `obsidian unresolved` on a 1,500-note vault with zero difference)
-- Classifies each unresolved link as **harmful**, **benign** or a **false positive** with deterministic rules, so the counts are reproducible and diffable
-- Baseline mode for CI: fails only when a *new* harmful link appears, so an existing backlog never blocks a pull request
+- Classifies each unresolved link as **broken**, **unwritten** or **ignored** with deterministic rules, so the counts are reproducible and diffable
+- Baseline mode for CI: fails only when a *new* broken link appears, so an existing backlog never blocks a pull request
 - Single static binary, no runtime dependencies. Git is optional and only used to tell deleted notes from notes that were never written
 
 ```
-$ wikilink-check ~/vault
-files scanned:   1567
-links found:     7093
-unresolved:      2332
+$ wikilink-check tests/fixtures/mini-vault
+files scanned:   8
+links found:     32
+unresolved:      20
 
 by tier / kind
-  harmful           1489
-    templater                0
-    missing_media           26
-    broken_markdown_link    14
-    deleted_note          1449
-  benign              710
-    placeholder            710
-  false_positive      133
-    explanatory             25
-    immutable_source       108
+  broken               6
+    templater                2
+    missing_media            2
+    broken_markdown_link     2
+    deleted_note             0
+  unwritten            9
+    unwritten                9
+  ignored              5
+    explanatory              3
+    readonly_source          2
 
 by source directory
-  journal                       2082
-  wiki                           112
-  ...
+  notes                           12
+  .                                2
+  docs                             2
+  raw                              2
+  templates                        2
 
 top targets
-     17  2026-05-09
-     15  2025-05-12
-  ...
+      4  Missing Note
+      1  ...
+      1  ../../Beta
 ```
 
 ## Install
@@ -56,7 +58,7 @@ wikilink-check [PATH] [OPTIONS]
       --update-baseline <FILE>  Write the current unresolved links as the baseline
       --top <N>              Number of most frequent targets to show (default: 10)
       --list                 List every unresolved link (text output)
-      --no-git               Skip git history; deleted notes become placeholders
+      --no-git               Skip git history; deleted notes become unwritten
 ```
 
 Exit codes: `0` no new failing links (or no baseline given), `1` new failing links, `2` error.
@@ -77,15 +79,21 @@ The rules were derived by comparing against Obsidian's own metadata cache (`obsi
 
 Rules are evaluated in order; the first match decides.
 
+Each unresolved link gets a tier (its state) and a kind (the rule that decided it).
+
+- **broken**: the target should exist and does not. Fix the note. This is what `--baseline` fails on by default
+- **unwritten**: the target is a note nobody has written yet. Obsidian treats such links as normal, and so does this tool
+- **ignored**: excluded from judgement by configuration, because the file documents the link syntax or is read-only content
+
 | # | Rule | Tier | Kind |
 |---|---|---|---|
-| 1 | Source matches `explanatory_files`, or target matches `explanatory_patterns` | false_positive | `explanatory` |
-| 2 | Source matches `immutable_sources` | false_positive | `immutable_source` |
-| 3 | Target matches `templater_pattern` (`<% ... %>`) | harmful | `templater` |
-| 4 | Target extension is in `media_extensions` | harmful | `missing_media` |
-| 5 | Link uses markdown syntax `[text](path)` | harmful | `broken_markdown_link` |
-| 6 | A file matching the target existed earlier in the history of `HEAD` | harmful | `deleted_note` |
-| 7 | Everything else: a note that has not been written yet | benign | `placeholder` |
+| 1 | Source matches `explanatory_files`, or target matches `explanatory_patterns` | ignored | `explanatory` |
+| 2 | Source matches `readonly_sources` | ignored | `readonly_source` |
+| 3 | Target matches `templater_pattern` (`<% ... %>`) | broken | `templater` |
+| 4 | Target extension is in `media_extensions` | broken | `missing_media` |
+| 5 | Link uses markdown syntax `[text](path)` | broken | `broken_markdown_link` |
+| 6 | A file matching the target existed earlier in the history of `HEAD` | broken | `deleted_note` |
+| 7 | Everything else | unwritten | `unwritten` |
 
 Rule 6 needs a full clone; on a shallow clone or outside git the tool warns and falls through to rule 7. `--no-git` does the same without the warning.
 
@@ -95,25 +103,25 @@ Rule 6 needs a full clone; on a shallow clone or outside git the tool warns and 
 
 ```toml
 # Never scanned and never a link target. Hidden paths are always excluded.
-exclude = ["node_modules/**", "rawdata/**"]
+exclude = ["node_modules/**", "archive/**"]
 
-# Files that document the link syntax itself; every unresolved link in them is a false positive.
-explanatory_files = ["claude/skills/**/SKILL.md", "journal/*/+template.md"]
+# Files that document the link syntax itself; every unresolved link in them is ignored.
+explanatory_files = ["docs/style-guide.md", "templates/**"]
 
-# Regexes on the target. A match is a false positive.
-explanatory_patterns = ['^\.\.\.$', '^<[^%].*>$']
+# Regexes on the target. A match is ignored.
+explanatory_patterns = ['^\.\.\.$', '^(note|page) name$']
 
-# Immutable copies of external content; their broken links cannot be fixed in place.
-immutable_sources = ["wiki/raw/articles/**"]
+# Verbatim copies of external content that are never edited; their links are ignored.
+readonly_sources = ["clippings/**"]
 
-# Regex identifying an unexpanded template variable.
+# Regex identifying an unexpanded template variable (Templater syntax by default).
 templater_pattern = '<%.*%>'
 
 # Extensions treated as media. Defaults cover images, audio, video, PDF and canvas.
 media_extensions = ["png", "jpg", "pdf"]
 
 # Tiers whose new entries fail a --baseline run.
-fail_on = ["harmful"]
+fail_on = ["broken"]
 ```
 
 ## Baseline workflow
@@ -122,14 +130,14 @@ fail_on = ["harmful"]
 # Once: snapshot the current state and commit the file.
 wikilink-check --update-baseline .wikilink-check-baseline.json
 
-# In CI: fail only when a new harmful link appears.
+# In CI: fail only when a new broken link appears.
 wikilink-check --baseline .wikilink-check-baseline.json
 
 # After fixing links: shrink the baseline and commit it.
 wikilink-check --update-baseline .wikilink-check-baseline.json
 ```
 
-Baseline entries are `(source, target, kind)` without line numbers, so editing unrelated lines does not churn the file. Links whose kind changes (a placeholder whose target turns out to have been deleted) count as new.
+Baseline entries are `(source, target, kind)` without line numbers, so editing unrelated lines does not churn the file. Links whose kind changes (an unwritten note whose target turns out to have been deleted) count as new.
 
 ## GitHub Actions
 

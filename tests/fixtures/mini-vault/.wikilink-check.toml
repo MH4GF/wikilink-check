@@ -2,4 +2,4 @@
 exclude = ["ignored/**"]
 explanatory_files = ["docs/**"]
 explanatory_patterns = ['^\.\.\.$']
-immutable_sources = ["raw/**"]
+readonly_sources = ["raw/**"]

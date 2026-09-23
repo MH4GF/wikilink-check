@@ -7,26 +7,26 @@ use crate::config::Config;
 use crate::parse::{RawLink, Syntax};
 use crate::scan::build_globset;
 
-/// The top-level verdict for an unresolved link.
+/// The state of an unresolved link, which is what the report and `fail_on` are about.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Tier {
-    /// Something is broken and a human should fix the note.
-    Harmful,
-    /// Expected in a working vault, such as a link to a note that has not been written yet.
-    Benign,
-    /// Not a link in practice: syntax documentation or content that must not be edited.
-    FalsePositive,
+    /// The target should exist and does not: the note needs fixing.
+    Broken,
+    /// The target is a note that has not been written yet, which Obsidian treats as normal.
+    Unwritten,
+    /// Excluded from judgement by configuration: syntax documentation or read-only content.
+    Ignored,
 }
 
 impl Tier {
-    pub const ALL: [Tier; 3] = [Tier::Harmful, Tier::Benign, Tier::FalsePositive];
+    pub const ALL: [Tier; 3] = [Tier::Broken, Tier::Unwritten, Tier::Ignored];
 
     pub fn as_str(self) -> &'static str {
         match self {
-            Tier::Harmful => "harmful",
-            Tier::Benign => "benign",
-            Tier::FalsePositive => "false_positive",
+            Tier::Broken => "broken",
+            Tier::Unwritten => "unwritten",
+            Tier::Ignored => "ignored",
         }
     }
 }
@@ -36,12 +36,12 @@ impl Tier {
 #[serde(rename_all = "snake_case")]
 pub enum Kind {
     Explanatory,
-    ImmutableSource,
+    ReadonlySource,
     Templater,
     MissingMedia,
     BrokenMarkdownLink,
     DeletedNote,
-    Placeholder,
+    Unwritten,
 }
 
 impl Kind {
@@ -50,30 +50,30 @@ impl Kind {
         Kind::MissingMedia,
         Kind::BrokenMarkdownLink,
         Kind::DeletedNote,
-        Kind::Placeholder,
+        Kind::Unwritten,
         Kind::Explanatory,
-        Kind::ImmutableSource,
+        Kind::ReadonlySource,
     ];
 
     pub fn as_str(self) -> &'static str {
         match self {
             Kind::Explanatory => "explanatory",
-            Kind::ImmutableSource => "immutable_source",
+            Kind::ReadonlySource => "readonly_source",
             Kind::Templater => "templater",
             Kind::MissingMedia => "missing_media",
             Kind::BrokenMarkdownLink => "broken_markdown_link",
             Kind::DeletedNote => "deleted_note",
-            Kind::Placeholder => "placeholder",
+            Kind::Unwritten => "unwritten",
         }
     }
 
     pub fn tier(self) -> Tier {
         match self {
-            Kind::Explanatory | Kind::ImmutableSource => Tier::FalsePositive,
+            Kind::Explanatory | Kind::ReadonlySource => Tier::Ignored,
             Kind::Templater | Kind::MissingMedia | Kind::BrokenMarkdownLink | Kind::DeletedNote => {
-                Tier::Harmful
+                Tier::Broken
             }
-            Kind::Placeholder => Tier::Benign,
+            Kind::Unwritten => Tier::Unwritten,
         }
     }
 }
@@ -93,7 +93,7 @@ pub struct Classified {
 pub struct Classifier {
     explanatory_files: GlobSet,
     explanatory_patterns: Vec<Regex>,
-    immutable_sources: GlobSet,
+    readonly_sources: GlobSet,
     templater: Regex,
     media_extensions: Vec<String>,
 }
@@ -110,7 +110,7 @@ impl Classifier {
                         .with_context(|| format!("invalid explanatory_patterns entry {p:?}"))
                 })
                 .collect::<Result<_>>()?,
-            immutable_sources: build_globset(&config.immutable_sources)?,
+            readonly_sources: build_globset(&config.readonly_sources)?,
             templater: Regex::new(&config.templater_pattern)
                 .context("invalid templater_pattern")?,
             media_extensions: config
@@ -130,8 +130,8 @@ impl Classifier {
                 .any(|r| r.is_match(&link.target))
         {
             Kind::Explanatory
-        } else if self.immutable_sources.is_match(source) {
-            Kind::ImmutableSource
+        } else if self.readonly_sources.is_match(source) {
+            Kind::ReadonlySource
         } else if self.templater.is_match(&link.target) {
             Kind::Templater
         } else if self.is_media(&link.target) {
@@ -141,7 +141,7 @@ impl Classifier {
         } else if existed_in_history {
             Kind::DeletedNote
         } else {
-            Kind::Placeholder
+            Kind::Unwritten
         };
         (kind.tier(), kind)
     }

@@ -41,14 +41,14 @@ pub fn check(vault: &Path, config: &Config, opts: &RunOptions) -> Result<Report>
             Ok(None) => {
                 warnings.push(
                     "git history unavailable (not a git repository or shallow clone); \
-                     deleted notes are reported as placeholders"
+                     deleted notes are reported as unwritten"
                         .to_string(),
                 );
                 None
             }
             Err(e) => {
                 warnings.push(format!(
-                    "git history unavailable ({e}); deleted notes are reported as placeholders"
+                    "git history unavailable ({e}); deleted notes are reported as unwritten"
                 ));
                 None
             }

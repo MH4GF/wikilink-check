@@ -50,8 +50,8 @@ fn fixture_classification() {
     assert_eq!(
         kinds("raw/articles/External.md"),
         vec![
-            "implementation.md=immutable_source",
-            "[[Upstream Ref]]=immutable_source"
+            "implementation.md=readonly_source",
+            "[[Upstream Ref]]=readonly_source"
         ]
     );
     assert_eq!(
@@ -61,7 +61,7 @@ fn fixture_classification() {
             "[[<% tp.date.now(\"YYYY-MM-DD\", 1) %>]]=templater",
         ]
     );
-    assert_eq!(kinds("Table.md"), vec!["[[missing/x\\|X]]=placeholder"]);
+    assert_eq!(kinds("Table.md"), vec!["[[missing/x\\|X]]=unwritten"]);
     assert!(kinds(".hidden/secret.md").is_empty());
     assert!(kinds("ignored/Ignored.md").is_empty());
 
@@ -69,18 +69,18 @@ fn fixture_classification() {
     assert_eq!(
         alpha,
         vec![
-            "[[Missing Note]]=placeholder",
-            "[[Missing Note|alias]]=placeholder",
-            "[[Missing Note#heading]]=placeholder",
-            "[[/notes/Beta]]=placeholder",
-            "[[wrong/Beta]]=placeholder",
-            "[[../../Beta]]=placeholder",
-            "[[.hidden/secret]]=placeholder",
+            "[[Missing Note]]=unwritten",
+            "[[Missing Note|alias]]=unwritten",
+            "[[Missing Note#heading]]=unwritten",
+            "[[/notes/Beta]]=unwritten",
+            "[[wrong/Beta]]=unwritten",
+            "[[../../Beta]]=unwritten",
+            "[[.hidden/secret]]=unwritten",
             "![[missing.png]]=missing_media",
             "missing.pdf=missing_media",
             "nope.md=broken_markdown_link",
             "Missing%20Note.md=broken_markdown_link",
-            "[[Missing Note]]=placeholder",
+            "[[Missing Note]]=unwritten",
         ]
     );
 }
@@ -111,15 +111,15 @@ fn baseline_exit_codes() {
     assert_eq!(json["baseline"]["new_failing"].as_array().unwrap().len(), 0);
     assert_eq!(json["baseline"]["fixed"].as_array().unwrap().len(), 0);
 
-    // Remove a harmful entry from the baseline: it is now "new" and fails the run.
+    // Remove a broken entry from the baseline: it is now "new" and fails the run.
     let mut b = Baseline::load(&baseline).unwrap();
-    let harmful = b
+    let broken = b
         .entries
         .iter()
         .find(|e| e.kind == wikilink_check::classify::Kind::MissingMedia)
         .cloned()
         .unwrap();
-    b.entries.remove(&harmful);
+    b.entries.remove(&broken);
     b.save(&baseline).unwrap();
     let out = bin()
         .arg(fixture())
@@ -130,20 +130,20 @@ fn baseline_exit_codes() {
     assert_eq!(out.status.code(), Some(1));
     assert!(String::from_utf8_lossy(&out.stdout).contains("new (failing):   1"));
 
-    // Remove only a benign entry instead: reported but exit 0.
+    // Remove only an unwritten entry instead: reported but exit 0.
     let mut b = Baseline::from_links(&run_fixture().links);
-    let benign = b
+    let unwritten = b
         .entries
         .iter()
-        .find(|e| e.kind == wikilink_check::classify::Kind::Placeholder)
+        .find(|e| e.kind == wikilink_check::classify::Kind::Unwritten)
         .cloned()
         .unwrap();
-    b.entries.remove(&benign);
+    b.entries.remove(&unwritten);
     // Also add a stale entry so that "fixed" is exercised.
     b.entries.insert(wikilink_check::baseline::Entry {
         source: "gone.md".into(),
         target: "Whatever".into(),
-        kind: wikilink_check::classify::Kind::Placeholder,
+        kind: wikilink_check::classify::Kind::Unwritten,
     });
     b.save(&baseline).unwrap();
     let out = bin()
@@ -206,24 +206,19 @@ fn deleted_note_from_git_history() {
         .map(|l| format!("{}={}", l.raw, l.kind.as_str()))
         .collect();
     // `[[Moved]]` resolves by basename after the move; `[[sub/Moved]]` no longer matches a
-    // path and its old path is in history, so it is a deleted note rather than a placeholder.
+    // path and its old path is in history, so it is a deleted note rather than unwritten.
     assert_eq!(
         kinds,
         vec![
             "[[Old]]=deleted_note",
-            "[[Never]]=placeholder",
+            "[[Never]]=unwritten",
             "[[sub/Moved]]=deleted_note"
         ]
     );
 
     let report = check(vault, &Config::default(), &RunOptions { no_git: true }).unwrap();
     assert!(!report.git_history_used);
-    assert!(
-        report
-            .links
-            .iter()
-            .all(|l| l.kind.as_str() == "placeholder")
-    );
+    assert!(report.links.iter().all(|l| l.kind.as_str() == "unwritten"));
 }
 
 #[test]
@@ -233,5 +228,5 @@ fn no_git_repository_is_a_warning() {
     let report = check(dir.path(), &Config::default(), &RunOptions::default()).unwrap();
     assert!(!report.git_history_used);
     assert_eq!(report.warnings.len(), 1);
-    assert_eq!(report.links[0].kind.as_str(), "placeholder");
+    assert_eq!(report.links[0].kind.as_str(), "unwritten");
 }

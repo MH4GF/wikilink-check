@@ -16,14 +16,14 @@ pub struct Config {
     /// Obsidian's own behaviour.
     pub exclude: Vec<String>,
     /// Glob patterns for files whose links are documentation of the link syntax itself.
-    /// Every unresolved link in these files is classified as a false positive.
+    /// Every unresolved link in these files is ignored.
     pub explanatory_files: Vec<String>,
-    /// Regular expressions matched against the link target. A match classifies the link as
-    /// a false positive (for example `^\.\.\.$` or `^<.*>$`).
+    /// Regular expressions matched against the link target. A match ignores the link (for
+    /// example `^\.\.\.$`).
     pub explanatory_patterns: Vec<String>,
-    /// Glob patterns for files that are immutable copies of external content. Unresolved
-    /// links in these files are false positives because the file must not be edited.
-    pub immutable_sources: Vec<String>,
+    /// Glob patterns for files that are verbatim copies of external content and are never
+    /// edited. Their unresolved links are ignored because nothing can be done about them.
+    pub readonly_sources: Vec<String>,
     /// Regular expression that identifies an unexpanded template variable in a link target.
     pub templater_pattern: String,
     /// Extensions (without the dot) treated as media or attachments.
@@ -38,7 +38,7 @@ impl Default for Config {
             exclude: Vec::new(),
             explanatory_files: Vec::new(),
             explanatory_patterns: Vec::new(),
-            immutable_sources: Vec::new(),
+            readonly_sources: Vec::new(),
             templater_pattern: r"<%.*%>".to_string(),
             media_extensions: [
                 "png", "jpg", "jpeg", "gif", "svg", "webp", "bmp", "avif", "pdf", "mp3", "wav",
@@ -47,7 +47,7 @@ impl Default for Config {
             .iter()
             .map(|s| s.to_string())
             .collect(),
-            fail_on: vec![Tier::Harmful],
+            fail_on: vec![Tier::Broken],
         }
     }
 }

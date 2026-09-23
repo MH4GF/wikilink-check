@@ -9,18 +9,18 @@ expression: report.to_json(10)
   "git_history_used": false,
   "warnings": [],
   "by_tier": {
-    "benign": 9,
-    "false_positive": 5,
-    "harmful": 6
+    "broken": 6,
+    "ignored": 5,
+    "unwritten": 9
   },
   "by_kind": {
     "broken_markdown_link": 2,
     "deleted_note": 0,
     "explanatory": 3,
-    "immutable_source": 2,
     "missing_media": 2,
-    "placeholder": 9,
-    "templater": 2
+    "readonly_source": 2,
+    "templater": 2,
+    "unwritten": 9
   },
   "by_source_dir": {
     ".": 2,
@@ -78,7 +78,7 @@ expression: report.to_json(10)
       "target": "...",
       "raw": "[[...]]",
       "syntax": "wikilink",
-      "tier": "false_positive",
+      "tier": "ignored",
       "kind": "explanatory"
     },
     {
@@ -87,8 +87,8 @@ expression: report.to_json(10)
       "target": "missing/x",
       "raw": "[[missing/x\\|X]]",
       "syntax": "wikilink",
-      "tier": "benign",
-      "kind": "placeholder"
+      "tier": "unwritten",
+      "kind": "unwritten"
     },
     {
       "source": "docs/SKILL.md",
@@ -96,7 +96,7 @@ expression: report.to_json(10)
       "target": "wikilink",
       "raw": "[[wikilink]]",
       "syntax": "wikilink",
-      "tier": "false_positive",
+      "tier": "ignored",
       "kind": "explanatory"
     },
     {
@@ -105,7 +105,7 @@ expression: report.to_json(10)
       "target": "ファイル名",
       "raw": "[[ファイル名|alias]]",
       "syntax": "wikilink",
-      "tier": "false_positive",
+      "tier": "ignored",
       "kind": "explanatory"
     },
     {
@@ -114,8 +114,8 @@ expression: report.to_json(10)
       "target": "Missing Note",
       "raw": "[[Missing Note]]",
       "syntax": "wikilink",
-      "tier": "benign",
-      "kind": "placeholder"
+      "tier": "unwritten",
+      "kind": "unwritten"
     },
     {
       "source": "notes/Alpha.md",
@@ -123,8 +123,8 @@ expression: report.to_json(10)
       "target": "Missing Note",
       "raw": "[[Missing Note|alias]]",
       "syntax": "wikilink",
-      "tier": "benign",
-      "kind": "placeholder"
+      "tier": "unwritten",
+      "kind": "unwritten"
     },
     {
       "source": "notes/Alpha.md",
@@ -132,8 +132,8 @@ expression: report.to_json(10)
       "target": "Missing Note",
       "raw": "[[Missing Note#heading]]",
       "syntax": "wikilink",
-      "tier": "benign",
-      "kind": "placeholder"
+      "tier": "unwritten",
+      "kind": "unwritten"
     },
     {
       "source": "notes/Alpha.md",
@@ -141,8 +141,8 @@ expression: report.to_json(10)
       "target": "/notes/Beta",
       "raw": "[[/notes/Beta]]",
       "syntax": "wikilink",
-      "tier": "benign",
-      "kind": "placeholder"
+      "tier": "unwritten",
+      "kind": "unwritten"
     },
     {
       "source": "notes/Alpha.md",
@@ -150,8 +150,8 @@ expression: report.to_json(10)
       "target": "wrong/Beta",
       "raw": "[[wrong/Beta]]",
       "syntax": "wikilink",
-      "tier": "benign",
-      "kind": "placeholder"
+      "tier": "unwritten",
+      "kind": "unwritten"
     },
     {
       "source": "notes/Alpha.md",
@@ -159,8 +159,8 @@ expression: report.to_json(10)
       "target": "../../Beta",
       "raw": "[[../../Beta]]",
       "syntax": "wikilink",
-      "tier": "benign",
-      "kind": "placeholder"
+      "tier": "unwritten",
+      "kind": "unwritten"
     },
     {
       "source": "notes/Alpha.md",
@@ -168,8 +168,8 @@ expression: report.to_json(10)
       "target": ".hidden/secret",
       "raw": "[[.hidden/secret]]",
       "syntax": "wikilink",
-      "tier": "benign",
-      "kind": "placeholder"
+      "tier": "unwritten",
+      "kind": "unwritten"
     },
     {
       "source": "notes/Alpha.md",
@@ -177,7 +177,7 @@ expression: report.to_json(10)
       "target": "missing.png",
       "raw": "![[missing.png]]",
       "syntax": "embed",
-      "tier": "harmful",
+      "tier": "broken",
       "kind": "missing_media"
     },
     {
@@ -186,7 +186,7 @@ expression: report.to_json(10)
       "target": "missing.pdf",
       "raw": "missing.pdf",
       "syntax": "markdown",
-      "tier": "harmful",
+      "tier": "broken",
       "kind": "missing_media"
     },
     {
@@ -195,7 +195,7 @@ expression: report.to_json(10)
       "target": "nope.md",
       "raw": "nope.md",
       "syntax": "markdown",
-      "tier": "harmful",
+      "tier": "broken",
       "kind": "broken_markdown_link"
     },
     {
@@ -204,7 +204,7 @@ expression: report.to_json(10)
       "target": "Missing Note.md",
       "raw": "Missing%20Note.md",
       "syntax": "markdown",
-      "tier": "harmful",
+      "tier": "broken",
       "kind": "broken_markdown_link"
     },
     {
@@ -213,8 +213,8 @@ expression: report.to_json(10)
       "target": "Missing Note",
       "raw": "[[Missing Note]]",
       "syntax": "wikilink",
-      "tier": "benign",
-      "kind": "placeholder"
+      "tier": "unwritten",
+      "kind": "unwritten"
     },
     {
       "source": "raw/articles/External.md",
@@ -222,8 +222,8 @@ expression: report.to_json(10)
       "target": "implementation.md",
       "raw": "implementation.md",
       "syntax": "markdown",
-      "tier": "false_positive",
-      "kind": "immutable_source"
+      "tier": "ignored",
+      "kind": "readonly_source"
     },
     {
       "source": "raw/articles/External.md",
@@ -231,8 +231,8 @@ expression: report.to_json(10)
       "target": "Upstream Ref",
       "raw": "[[Upstream Ref]]",
       "syntax": "wikilink",
-      "tier": "false_positive",
-      "kind": "immutable_source"
+      "tier": "ignored",
+      "kind": "readonly_source"
     },
     {
       "source": "templates/daily.md",
@@ -240,7 +240,7 @@ expression: report.to_json(10)
       "target": "<% tp.date.now(\"YYYY-MM-DD\", -1) %>",
       "raw": "[[<% tp.date.now(\"YYYY-MM-DD\", -1) %>]]",
       "syntax": "wikilink",
-      "tier": "harmful",
+      "tier": "broken",
       "kind": "templater"
     },
     {
@@ -249,7 +249,7 @@ expression: report.to_json(10)
       "target": "<% tp.date.now(\"YYYY-MM-DD\", 1) %>",
       "raw": "[[<% tp.date.now(\"YYYY-MM-DD\", 1) %>]]",
       "syntax": "wikilink",
-      "tier": "harmful",
+      "tier": "broken",
       "kind": "templater"
     }
   ]
